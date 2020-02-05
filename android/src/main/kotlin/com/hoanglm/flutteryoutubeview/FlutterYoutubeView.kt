@@ -16,9 +16,9 @@ import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.PlayerConstan
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
+import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
-import io.flutter.plugin.common.PluginRegistry
 import io.flutter.plugin.platform.PlatformView
 import java.util.concurrent.atomic.AtomicReference
 
@@ -27,7 +27,8 @@ class FlutterYoutubeView(
         id: Int,
         private val params: HashMap<String, *>,
         private val state: AtomicReference<Lifecycle.Event>,
-        private val registrar: PluginRegistry.Registrar
+        private val activity: Activity,
+        messenger: BinaryMessenger
 ) :
         PlatformView,
         MethodChannel.MethodCallHandler,
@@ -48,10 +49,10 @@ class FlutterYoutubeView(
         val mode = params["scale_mode"] as? Int ?: 0
         view = createView(mode = mode)
         changeScaleMode(mode = mode)
-        methodChannel = MethodChannel(registrar.messenger(), "plugins.hoanglm.com/youtube_$id")
+        methodChannel = MethodChannel(messenger, "plugins.hoanglm.com/youtube_$id")
         methodChannel.setMethodCallHandler(this)
-        registrarActivityHashCode = registrar.activity().hashCode()
-        registrar.activity().application.registerActivityLifecycleCallbacks(this)
+        registrarActivityHashCode = activity.hashCode()
+        activity.application.registerActivityLifecycleCallbacks(this)
         initYouTubePlayerView()
     }
 
@@ -136,7 +137,7 @@ class FlutterYoutubeView(
     override fun dispose() {
         disposed = true
         youtubePlayerView.release()
-        registrar.activity().application.unregisterActivityLifecycleCallbacks(this)
+        activity.application.unregisterActivityLifecycleCallbacks(this)
     }
 
     override fun onMethodCall(methodCall: MethodCall, result: MethodChannel.Result) {
